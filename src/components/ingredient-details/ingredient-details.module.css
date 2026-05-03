@@ -1,0 +1,32 @@
+.details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.image {
+  width: 480px;
+  height: 240px;
+  object-fit: contain;
+}
+
+.name {
+  text-align: center;
+}
+
+.nutrition {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.nutrition_item {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+}
