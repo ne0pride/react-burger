@@ -1,9 +1,15 @@
 .burger_ingredients {
   display: flex;
+  flex-shrink: 0;
   flex-direction: column;
-  max-width: 600px;
+  width: 600px;
+  height: 100%;
+  overflow: hidden;
   color: var(--text-primary-color);
-  font-family: 'Jet Brains Mono', serif;
+}
+
+.nav {
+  flex-shrink: 0;
 }
 
 .menu {
@@ -11,5 +17,27 @@
   margin: 0;
   padding: 0;
   text-align: center;
+  list-style-type: none;
+}
+
+.sections {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden auto;
+}
+
+.section {
+  margin: 0;
+  padding: 0;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px 24px;
+  margin: 0;
+  padding-top: 0;
   list-style-type: none;
 }
