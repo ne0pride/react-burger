@@ -1,23 +1,37 @@
-import { INGREDIENTS_ENDPOINT } from './constants';
+import { INGREDIENTS_ENDPOINT, ORDERS_ENDPOINT } from './constants';
 
-// Универсальная проверка ответа от сервера.
-// Если статус НЕ ok (200–299) — выбрасываем ошибку, чтобы её поймал .catch()
-const checkResponse = (response) => {
+// Универсальная обёртка проверки ответа.
+// Если HTTP-статус не 2xx — бросаем ошибку.
+// Если в теле {success: false} — бросаем ошибку с сообщением сервера.
+const checkResponse = async (response) => {
   if (!response.ok) {
-    return Promise.reject(`Ошибка ${response.status}`);
+    throw new Error(`Ошибка ${response.status}`);
   }
-  return response.json();
+  const result = await response.json();
+  if (!result.success) {
+    throw new Error(result.message || 'Запрос завершился с success: false');
+  }
+  return result;
 };
 
-// Запрос за списком ингредиентов.
-// Сервер возвращает объект вида { success: true, data: [...] }
-export const getIngredients = () => {
-  return fetch(INGREDIENTS_ENDPOINT)
-    .then(checkResponse)
-    .then((result) => {
-      if (!result.success) {
-        return Promise.reject('Ответ сервера не success');
-      }
-      return result.data;
-    });
+// GET /ingredients — получить справочник ингредиентов.
+export const getIngredients = async () => {
+  const response = await fetch(INGREDIENTS_ENDPOINT);
+  const result = await checkResponse(response);
+  return result.data;
+};
+
+// POST /orders — создать заказ.
+// Принимает массив _id ингредиентов (первый и последний — булка).
+// Возвращает номер заказа.
+export const createOrder = async (ingredientIds) => {
+  const response = await fetch(ORDERS_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ingredients: ingredientIds }),
+  });
+  const result = await checkResponse(response);
+  return result.order.number;
 };

@@ -2,88 +2,158 @@ import {
   Button,
   ConstructorElement,
   CurrencyIcon,
-  DragIcon,
 } from '@krgaa/react-developer-burger-ui-components';
-import PropTypes from 'prop-types';
-import { useMemo } from 'react';
+import { useCallback } from 'react';
+import { useDrop } from 'react-dnd';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { ingredientPropType } from '@utils/prop-types';
+import { BurgerConstructorItem } from '@components/burger-constructor-item/burger-constructor-item';
+import {
+  addIngredient,
+  moveIngredient,
+  removeIngredient,
+  selectBun,
+  selectFillings,
+  selectTotalPrice,
+} from '@services/burger-constructor/slice';
+import { placeOrder } from '@services/order/actions';
+import { selectOrderIsLoading } from '@services/order/slice';
 
 import styles from './burger-constructor.module.css';
 
-export const BurgerConstructor = ({ ingredients, onOrderClick }) => {
-  // Выбираем булку (первую попавшуюся) и начинки (всё, кроме булок).
-  // На следующем спринте это будет приходить из стейта конструктора (Redux).
-  const bun = useMemo(
-    () => ingredients.find((item) => item.type === 'bun'),
-    [ingredients]
+export const BurgerConstructor = () => {
+  const dispatch = useDispatch();
+
+  const bun = useSelector(selectBun);
+  const fillings = useSelector(selectFillings);
+  const totalPrice = useSelector(selectTotalPrice);
+  const isOrderLoading = useSelector(selectOrderIsLoading);
+
+  const [{ isOver, draggedItem }, dropRef] = useDrop({
+    accept: 'ingredient',
+    drop: (item) => {
+      dispatch(addIngredient(item));
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      draggedItem: monitor.getItem(),
+    }),
+  });
+
+  const handleRemove = useCallback(
+    (uniqueId) => {
+      dispatch(removeIngredient(uniqueId));
+    },
+    [dispatch]
   );
 
-  const fillings = useMemo(
-    () => ingredients.filter((item) => item.type !== 'bun'),
-    [ingredients]
+  const handleMove = useCallback(
+    (fromIndex, toIndex) => {
+      dispatch(moveIngredient({ fromIndex, toIndex }));
+    },
+    [dispatch]
   );
 
-  // Итоговая цена: 2 булки (верх + низ) + все начинки.
-  const totalPrice = useMemo(() => {
-    const bunPrice = bun ? bun.price * 2 : 0;
-    const fillingsPrice = fillings.reduce((sum, item) => sum + item.price, 0);
-    return bunPrice + fillingsPrice;
-  }, [bun, fillings]);
+  // Кнопка «Оформить заказ» диспатчит placeOrder, передавая текущий
+  // состав бургера. Слайс order сам обработает pending/fulfilled/rejected.
+  // Модалка откроется в App когда в сторе появится orderNumber.
+  const handlePlaceOrder = useCallback(() => {
+    if (!bun) return;
+    dispatch(placeOrder({ bun, fillings }));
+  }, [bun, fillings, dispatch]);
 
-  if (!bun) {
-    return null;
-  }
+  const isHoveringBun = isOver && draggedItem?.type === 'bun';
+  const isHoveringFilling = isOver && draggedItem && draggedItem.type !== 'bun';
+
+  // Кнопка неактивна если нет булки (без неё нельзя сделать заказ)
+  // или пока летит запрос.
+  const isOrderButtonDisabled = !bun || isOrderLoading;
 
   return (
-    <section className={styles.burger_constructor}>
-      <div className={styles.bun}>
-        <ConstructorElement
-          type="top"
-          isLocked={true}
-          text={`${bun.name} (верх)`}
-          price={bun.price}
-          thumbnail={bun.image}
-        />
-      </div>
+    <section ref={dropRef} className={`${styles.burger_constructor} pt-25`}>
+      {bun ? (
+        <div className={styles.bun}>
+          <ConstructorElement
+            type="top"
+            isLocked={true}
+            text={`${bun.name} (верх)`}
+            price={bun.price}
+            thumbnail={bun.image}
+          />
+        </div>
+      ) : (
+        <div
+          className={`${styles.placeholder} ${styles.placeholder_top} ${
+            isHoveringBun ? styles.placeholder_hover : ''
+          }`}
+        >
+          <p className="text text_type_main-default text_color_inactive">
+            Выберите булки
+          </p>
+        </div>
+      )}
 
-      <ul className={`${styles.fillings} custom-scroll`}>
-        {fillings.map((ingredient, index) => (
-          <li key={`${ingredient._id}-${index}`} className={styles.filling_item}>
-            <DragIcon type="primary" />
-            <ConstructorElement
-              text={ingredient.name}
-              price={ingredient.price}
-              thumbnail={ingredient.image}
+      {fillings.length > 0 ? (
+        <ul className={`${styles.fillings} custom-scroll`}>
+          {fillings.map((item, index) => (
+            <BurgerConstructorItem
+              key={item.uniqueId}
+              ingredient={item}
+              index={index}
+              onMove={handleMove}
+              onRemove={handleRemove}
             />
-          </li>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      ) : (
+        <div
+          className={`${styles.placeholder} ${
+            isHoveringFilling ? styles.placeholder_hover : ''
+          }`}
+        >
+          <p className="text text_type_main-default text_color_inactive">
+            Выберите начинку
+          </p>
+        </div>
+      )}
 
-      <div className={styles.bun}>
-        <ConstructorElement
-          type="bottom"
-          isLocked={true}
-          text={`${bun.name} (низ)`}
-          price={bun.price}
-          thumbnail={bun.image}
-        />
-      </div>
+      {bun ? (
+        <div className={styles.bun}>
+          <ConstructorElement
+            type="bottom"
+            isLocked={true}
+            text={`${bun.name} (низ)`}
+            price={bun.price}
+            thumbnail={bun.image}
+          />
+        </div>
+      ) : (
+        <div
+          className={`${styles.placeholder} ${styles.placeholder_bottom} ${
+            isHoveringBun ? styles.placeholder_hover : ''
+          }`}
+        >
+          <p className="text text_type_main-default text_color_inactive">
+            Выберите булки
+          </p>
+        </div>
+      )}
 
-      <div className={styles.total}>
+      <div className={`${styles.total} mt-10`}>
         <div className={styles.total_price}>
-          <span className="text text_type_digits-medium mr-2">{totalPrice}</span>
+          <p className="text text_type_digits-medium mr-2">{totalPrice}</p>
           <CurrencyIcon type="primary" />
         </div>
-        <Button htmlType="button" type="primary" size="large" onClick={onOrderClick}>
-          Оформить заказ
+        <Button
+          htmlType="button"
+          type="primary"
+          size="large"
+          onClick={handlePlaceOrder}
+          disabled={isOrderButtonDisabled}
+        >
+          {isOrderLoading ? 'Оформляем...' : 'Оформить заказ'}
         </Button>
       </div>
     </section>
   );
-};
-
-BurgerConstructor.propTypes = {
-  ingredients: PropTypes.arrayOf(ingredientPropType).isRequired,
-  onOrderClick: PropTypes.func.isRequired,
 };

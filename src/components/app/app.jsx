@@ -1,5 +1,6 @@
 import { Preloader } from '@krgaa/react-developer-burger-ui-components';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { AppHeader } from '@components/app-header/app-header';
 import { BurgerConstructor } from '@components/burger-constructor/burger-constructor';
@@ -7,53 +8,42 @@ import { BurgerIngredients } from '@components/burger-ingredients/burger-ingredi
 import { IngredientDetails } from '@components/ingredient-details/ingredient-details';
 import { Modal } from '@components/modal/modal';
 import { OrderDetails } from '@components/order-details/order-details';
-import { getIngredients } from '@utils/api';
+import {
+  clearIngredient,
+  selectIngredientDetails,
+} from '@services/ingredient-details/slice';
+import { fetchIngredients } from '@services/ingredients/actions';
+import {
+  selectError,
+  selectIngredients,
+  selectIsLoading,
+} from '@services/ingredients/slice';
+import { clearOrder, selectOrderNumber } from '@services/order/slice';
 
 import styles from './app.module.css';
 
 export const App = () => {
-  // Данные с сервера и состояния запроса.
-  const [ingredients, setIngredients] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
 
-  // Состояние модалок.
-  const [activeModal, setActiveModal] = useState(null);
-  const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const ingredients = useSelector(selectIngredients);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
 
-  // Запрос к API за ингредиентами при монтировании App.
-  // Чек-лист: «Запрос к API за информацией об ингредиентах работает корректно
-  // и выполняется единожды при монтировании компонента App».
+  const selectedIngredient = useSelector(selectIngredientDetails);
+  const orderNumber = useSelector(selectOrderNumber);
+
   useEffect(() => {
-    getIngredients()
-      .then((data) => {
-        setIngredients(data);
-      })
-      .catch((err) => {
-        // Чек-лист: «Цепочка обработки промисов завершается блоком catch».
-        console.error('Ошибка загрузки ингредиентов:', err);
-        setError(typeof err === 'string' ? err : 'Не удалось загрузить ингредиенты');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
+    dispatch(fetchIngredients());
+  }, [dispatch]);
 
-  const handleIngredientClick = useCallback((ingredient) => {
-    setSelectedIngredient(ingredient);
-    setActiveModal('ingredient');
-  }, []);
+  const handleCloseIngredientModal = useCallback(() => {
+    dispatch(clearIngredient());
+  }, [dispatch]);
 
-  const handleOrderClick = useCallback(() => {
-    setActiveModal('order');
-  }, []);
+  const handleCloseOrderModal = useCallback(() => {
+    dispatch(clearOrder());
+  }, [dispatch]);
 
-  const handleCloseModal = useCallback(() => {
-    setActiveModal(null);
-    setSelectedIngredient(null);
-  }, []);
-
-  // Контент main-области меняется в зависимости от состояния запроса.
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -73,11 +63,8 @@ export const App = () => {
 
     return (
       <>
-        <BurgerIngredients
-          ingredients={ingredients}
-          onIngredientClick={handleIngredientClick}
-        />
-        <BurgerConstructor ingredients={ingredients} onOrderClick={handleOrderClick} />
+        <BurgerIngredients ingredients={ingredients} />
+        <BurgerConstructor />
       </>
     );
   };
@@ -87,14 +74,14 @@ export const App = () => {
       <AppHeader />
       <main className={styles.main}>{renderContent()}</main>
 
-      {activeModal === 'ingredient' && selectedIngredient && (
-        <Modal title="Детали ингредиента" onClose={handleCloseModal}>
+      {selectedIngredient && (
+        <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
           <IngredientDetails ingredient={selectedIngredient} />
         </Modal>
       )}
 
-      {activeModal === 'order' && (
-        <Modal onClose={handleCloseModal}>
+      {orderNumber && (
+        <Modal onClose={handleCloseOrderModal}>
           <OrderDetails />
         </Modal>
       )}
