@@ -1,8 +1,11 @@
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
 import PropTypes from 'prop-types';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { IngredientCard } from '@components/ingredient-card/ingredient-card';
+import { selectIngredientCounts } from '@services/burger-constructor/slice';
+import { setIngredient } from '@services/ingredient-details/slice';
 import { ingredientPropType } from '@utils/prop-types';
 
 import styles from './burger-ingredients.module.css';
@@ -13,8 +16,11 @@ const TAB_LABELS = {
   main: 'Начинки',
 };
 
-export const BurgerIngredients = ({ ingredients, onIngredientClick }) => {
+export const BurgerIngredients = ({ ingredients }) => {
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('bun');
+
+  const ingredientCounts = useSelector(selectIngredientCounts);
 
   const sectionsRef = useRef(null);
   const bunRef = useRef(null);
@@ -43,7 +49,45 @@ export const BurgerIngredients = ({ ingredients, onIngredientClick }) => {
       const offset = target.offsetTop - container.offsetTop;
       container.scrollTo({ top: offset, behavior: 'smooth' });
     }
+    // sectionRefs стабилен между рендерами.
   }, []);
+
+  // Подсветка таба при скролле.
+  // Чек-лист: «При скролле внутри компонента BurgerIngredients самый
+  // ближний к левой верхней границе заголовок контейнера становится
+  // активным, и для реализации этой функциональности использованы
+  // рефы и метод getBoundingClientRect()».
+  const handleScroll = useCallback(() => {
+    const container = sectionsRef.current;
+    if (!container) return;
+
+    const containerTop = container.getBoundingClientRect().top;
+
+    // Считаем расстояние от верха контейнера до верха каждого заголовка.
+    // Берём абсолютное значение, чтобы заголовок мог быть и выше, и ниже.
+    const distances = Object.entries(sectionRefs).map(([type, ref]) => {
+      if (!ref.current) return { type, distance: Infinity };
+      const headingTop = ref.current.getBoundingClientRect().top;
+      return { type, distance: Math.abs(headingTop - containerTop) };
+    });
+
+    // Тот, у кого расстояние минимально — активный.
+    const closest = distances.reduce((min, curr) =>
+      curr.distance < min.distance ? curr : min
+    );
+
+    // setActiveTab вызывается на каждый скролл, но React не сделает
+    // ререндер, если новое значение равно текущему (Object.is сравнение).
+    setActiveTab(closest.type);
+    // sectionRefs стабилен между рендерами.
+  }, []);
+
+  const handleIngredientClick = useCallback(
+    (ingredient) => {
+      dispatch(setIngredient(ingredient));
+    },
+    [dispatch]
+  );
 
   return (
     <section className={styles.burger_ingredients}>
@@ -62,7 +106,11 @@ export const BurgerIngredients = ({ ingredients, onIngredientClick }) => {
         </ul>
       </nav>
 
-      <div ref={sectionsRef} className={`${styles.sections} custom-scroll mt-10`}>
+      <div
+        ref={sectionsRef}
+        onScroll={handleScroll}
+        className={`${styles.sections} custom-scroll mt-10`}
+      >
         {Object.entries(groupedIngredients).map(([type, items]) => (
           <section key={type} className={styles.section}>
             <h2 ref={sectionRefs[type]} className="text text_type_main-medium mb-6">
@@ -73,8 +121,8 @@ export const BurgerIngredients = ({ ingredients, onIngredientClick }) => {
                 <IngredientCard
                   key={ingredient._id}
                   ingredient={ingredient}
-                  count={1}
-                  onClick={onIngredientClick}
+                  count={ingredientCounts[ingredient._id] || 0}
+                  onClick={handleIngredientClick}
                 />
               ))}
             </ul>
@@ -87,5 +135,4 @@ export const BurgerIngredients = ({ ingredients, onIngredientClick }) => {
 
 BurgerIngredients.propTypes = {
   ingredients: PropTypes.arrayOf(ingredientPropType).isRequired,
-  onIngredientClick: PropTypes.func.isRequired,
 };

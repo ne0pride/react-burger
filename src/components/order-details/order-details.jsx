@@ -1,15 +1,33 @@
-import { CheckMarkIcon } from '@krgaa/react-developer-burger-ui-components';
+import { CheckMarkIcon, Preloader } from '@krgaa/react-developer-burger-ui-components';
+import { useSelector } from 'react-redux';
+
+import { selectOrderNumber } from '@services/order/slice';
 
 import styles from './order-details.module.css';
 
-// Тестовые данные. На следующих спринтах номер будет приходить с сервера.
-const ORDER_ID = '034536';
-
 export const OrderDetails = () => {
+  const orderNumber = useSelector(selectOrderNumber);
+
+  // Если номера ещё нет — показываем прелоадер.
+  // На практике этот кейс почти не встречается: модалка открывается
+  // ТОЛЬКО когда orderNumber уже есть. Но если запрос ещё в процессе,
+  // увидим прелоадер.
+  if (!orderNumber) {
+    return (
+      <div className={`${styles.details} pb-30`}>
+        <Preloader />
+      </div>
+    );
+  }
+
+  // Форматируем номер с лидирующими нулями до 6 знаков,
+  // как в макете (034536).
+  const formattedOrderId = String(orderNumber).padStart(6, '0');
+
   return (
     <div className={`${styles.details} pb-30`}>
       <p className={`${styles.order_id} text text_type_digits-large mt-15`}>
-        {ORDER_ID}
+        {formattedOrderId}
       </p>
       <p className={`${styles.label} text text_type_main-medium mt-8`}>
         идентификатор заказа
