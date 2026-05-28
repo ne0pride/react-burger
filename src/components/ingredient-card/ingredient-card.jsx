@@ -1,12 +1,19 @@
 import { Counter, CurrencyIcon } from '@krgaa/react-developer-burger-ui-components';
 import PropTypes from 'prop-types';
 import { useDrag } from 'react-dnd';
+import { useDispatch } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import { setIngredient } from '@services/ingredient-details/slice';
 import { ingredientPropType } from '@utils/prop-types';
 
 import styles from './ingredient-card.module.css';
 
-export const IngredientCard = ({ ingredient, count, onClick }) => {
+export const IngredientCard = ({ ingredient, count }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
+
   const [{ isDragging }, dragRef] = useDrag({
     type: 'ingredient',
     item: ingredient,
@@ -16,7 +23,14 @@ export const IngredientCard = ({ ingredient, count, onClick }) => {
   });
 
   const handleClick = () => {
-    onClick(ingredient);
+    // Кладём ингредиент в стор (для рендера IngredientDetails внутри модалки).
+    dispatch(setIngredient(ingredient));
+    // Навигируем на /ingredients/:id, передавая текущий location как background.
+    // Это магия паттерна "modal as a route": App увидит state.background
+    // и нарисует модалку поверх текущего фона, а не отдельную страницу.
+    navigate(`/ingredients/${ingredient._id}`, {
+      state: { background: location },
+    });
   };
 
   const opacity = isDragging ? 0.4 : 1;
@@ -37,5 +51,4 @@ export const IngredientCard = ({ ingredient, count, onClick }) => {
 IngredientCard.propTypes = {
   ingredient: ingredientPropType.isRequired,
   count: PropTypes.number.isRequired,
-  onClick: PropTypes.func.isRequired,
 };

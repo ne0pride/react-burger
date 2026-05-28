@@ -6,8 +6,10 @@ import {
 import { useCallback } from 'react';
 import { useDrop } from 'react-dnd';
 import { useDispatch, useSelector } from 'react-redux';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { BurgerConstructorItem } from '@components/burger-constructor-item/burger-constructor-item';
+import { selectIsAuthenticated } from '@services/auth/slice';
 import {
   addIngredient,
   moveIngredient,
@@ -23,11 +25,14 @@ import styles from './burger-constructor.module.css';
 
 export const BurgerConstructor = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const bun = useSelector(selectBun);
   const fillings = useSelector(selectFillings);
   const totalPrice = useSelector(selectTotalPrice);
   const isOrderLoading = useSelector(selectOrderIsLoading);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   const [{ isOver, draggedItem }, dropRef] = useDrop({
     accept: 'ingredient',
@@ -59,8 +64,15 @@ export const BurgerConstructor = () => {
   // Модалка откроется в App когда в сторе появится orderNumber.
   const handlePlaceOrder = useCallback(() => {
     if (!bun) return;
+    // Чек-лист: «Заказы могут делать только авторизованные пользователи».
+    // Анонима отправляем на /login, запоминая откуда пришли, чтобы после
+    // авторизации ProtectedRoute вернул его обратно.
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: location } });
+      return;
+    }
     dispatch(placeOrder({ bun, fillings }));
-  }, [bun, fillings, dispatch]);
+  }, [bun, fillings, isAuthenticated, navigate, location, dispatch]);
 
   const isHoveringBun = isOver && draggedItem?.type === 'bun';
   const isHoveringFilling = isOver && draggedItem && draggedItem.type !== 'bun';

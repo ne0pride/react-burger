@@ -4,7 +4,5 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-
-  /* По макету: #000000 с opacity 60% */
   background-color: rgb(0 0 0 / 60%);
 }

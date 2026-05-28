@@ -1,0 +1,20 @@
+.not_found {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.code {
+  margin: 0;
+  font-size: 120px;
+  line-height: 1;
+}
+
+.home_link {
+  color: var(--colors-interface-accent);
+  text-decoration: none;
+}
