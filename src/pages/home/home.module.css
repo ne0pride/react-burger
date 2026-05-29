@@ -1,0 +1,20 @@
+.main {
+  display: flex;
+  flex-grow: 1;
+  align-items: stretch;
+  gap: 40px;
+  width: 100%;
+  max-width: 1280px;
+  min-height: 0;
+  margin: 0 auto;
+  padding-right: 20px;
+  padding-left: 20px;
+  overflow: hidden;
+}
+
+.state_message {
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
+  align-items: center;
+}

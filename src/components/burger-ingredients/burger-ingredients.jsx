@@ -1,132 +1,109 @@
 import { Tab } from '@krgaa/react-developer-burger-ui-components';
 import PropTypes from 'prop-types';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { IngredientCard } from '@components/ingredient-card/ingredient-card';
 import { selectIngredientCounts } from '@services/burger-constructor/slice';
-import { setIngredient } from '@services/ingredient-details/slice';
 import { ingredientPropType } from '@utils/prop-types';
 
 import styles from './burger-ingredients.module.css';
 
-const TAB_LABELS = {
-  bun: 'Булки',
-  sauce: 'Соусы',
-  main: 'Начинки',
-};
+const CATEGORIES = [
+  { key: 'bun', title: 'Булки' },
+  { key: 'sauce', title: 'Соусы' },
+  { key: 'main', title: 'Начинки' },
+];
 
 export const BurgerIngredients = ({ ingredients }) => {
-  const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState('bun');
+  const [currentTab, setCurrentTab] = useState('bun');
+  const counts = useSelector(selectIngredientCounts);
 
-  const ingredientCounts = useSelector(selectIngredientCounts);
-
-  const sectionsRef = useRef(null);
-  const bunRef = useRef(null);
-  const sauceRef = useRef(null);
-  const mainRef = useRef(null);
-
-  const sectionRefs = {
-    bun: bunRef,
-    sauce: sauceRef,
-    main: mainRef,
-  };
+  const containerRef = useRef(null);
+  const titlesRef = useRef({});
 
   const groupedIngredients = useMemo(() => {
-    return {
-      bun: ingredients.filter((item) => item.type === 'bun'),
-      sauce: ingredients.filter((item) => item.type === 'sauce'),
-      main: ingredients.filter((item) => item.type === 'main'),
-    };
+    return CATEGORIES.reduce((acc, category) => {
+      acc[category.key] = ingredients.filter((item) => item.type === category.key);
+      return acc;
+    }, {});
   }, [ingredients]);
 
-  const handleTabClick = useCallback((tab) => {
-    setActiveTab(tab);
-    const container = sectionsRef.current;
-    const target = sectionRefs[tab].current;
-    if (container && target) {
-      const offset = target.offsetTop - container.offsetTop;
-      container.scrollTo({ top: offset, behavior: 'smooth' });
-    }
-    // sectionRefs стабилен между рендерами.
-  }, []);
-
-  // Подсветка таба при скролле.
-  // Чек-лист: «При скролле внутри компонента BurgerIngredients самый
-  // ближний к левой верхней границе заголовок контейнера становится
-  // активным, и для реализации этой функциональности использованы
-  // рефы и метод getBoundingClientRect()».
+  // При скролле определяем какой заголовок ближе к верху — выделяем нужный таб.
+  // Чек-лист: «использованы рефы и метод getBoundingClientRect()».
   const handleScroll = useCallback(() => {
-    const container = sectionsRef.current;
-    if (!container) return;
+    if (!containerRef.current) return;
+    const containerTop = containerRef.current.getBoundingClientRect().top;
 
-    const containerTop = container.getBoundingClientRect().top;
+    let closestCategory = currentTab;
+    let minDistance = Infinity;
 
-    // Считаем расстояние от верха контейнера до верха каждого заголовка.
-    // Берём абсолютное значение, чтобы заголовок мог быть и выше, и ниже.
-    const distances = Object.entries(sectionRefs).map(([type, ref]) => {
-      if (!ref.current) return { type, distance: Infinity };
-      const headingTop = ref.current.getBoundingClientRect().top;
-      return { type, distance: Math.abs(headingTop - containerTop) };
+    CATEGORIES.forEach((category) => {
+      const titleElement = titlesRef.current[category.key];
+      if (!titleElement) return;
+      const titleTop = titleElement.getBoundingClientRect().top;
+      const distance = Math.abs(titleTop - containerTop);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestCategory = category.key;
+      }
     });
 
-    // Тот, у кого расстояние минимально — активный.
-    const closest = distances.reduce((min, curr) =>
-      curr.distance < min.distance ? curr : min
-    );
+    if (closestCategory !== currentTab) {
+      setCurrentTab(closestCategory);
+    }
+  }, [currentTab]);
 
-    // setActiveTab вызывается на каждый скролл, но React не сделает
-    // ререндер, если новое значение равно текущему (Object.is сравнение).
-    setActiveTab(closest.type);
-    // sectionRefs стабилен между рендерами.
-  }, []);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return undefined;
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
-  const handleIngredientClick = useCallback(
-    (ingredient) => {
-      dispatch(setIngredient(ingredient));
-    },
-    [dispatch]
-  );
+  const handleTabClick = (value) => {
+    setCurrentTab(value);
+    const target = titlesRef.current[value];
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
-    <section className={styles.burger_ingredients}>
-      <h1 className="text text_type_main-large mt-10 mb-5">Соберите бургер</h1>
+    <section className={`${styles.burger_ingredients} pt-10`}>
       <nav className={styles.nav}>
         <ul className={styles.menu}>
-          <Tab value="bun" active={activeTab === 'bun'} onClick={handleTabClick}>
-            Булки
-          </Tab>
-          <Tab value="sauce" active={activeTab === 'sauce'} onClick={handleTabClick}>
-            Соусы
-          </Tab>
-          <Tab value="main" active={activeTab === 'main'} onClick={handleTabClick}>
-            Начинки
-          </Tab>
+          {CATEGORIES.map((category) => (
+            <Tab
+              key={category.key}
+              value={category.key}
+              active={currentTab === category.key}
+              onClick={handleTabClick}
+            >
+              {category.title}
+            </Tab>
+          ))}
         </ul>
       </nav>
-
-      <div
-        ref={sectionsRef}
-        onScroll={handleScroll}
-        className={`${styles.sections} custom-scroll mt-10`}
-      >
-        {Object.entries(groupedIngredients).map(([type, items]) => (
-          <section key={type} className={styles.section}>
-            <h2 ref={sectionRefs[type]} className="text text_type_main-medium mb-6">
-              {TAB_LABELS[type]}
+      <div ref={containerRef} className={`${styles.sections} custom-scroll mt-10`}>
+        {CATEGORIES.map((category) => (
+          <div key={category.key} className={styles.section}>
+            <h2
+              ref={(el) => (titlesRef.current[category.key] = el)}
+              className="text text_type_main-medium"
+            >
+              {category.title}
             </h2>
-            <ul className={`${styles.list} pl-4 pr-4 pb-10`}>
-              {items.map((ingredient) => (
+            <ul className={`${styles.list} mt-6 mb-10`}>
+              {groupedIngredients[category.key]?.map((ingredient) => (
                 <IngredientCard
                   key={ingredient._id}
                   ingredient={ingredient}
-                  count={ingredientCounts[ingredient._id] || 0}
-                  onClick={handleIngredientClick}
+                  count={counts[ingredient._id] || 0}
                 />
               ))}
             </ul>
-          </section>
+          </div>
         ))}
       </div>
     </section>

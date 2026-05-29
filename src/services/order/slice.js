@@ -3,13 +3,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import { placeOrder } from './actions';
 
 const initialState = {
-  // Номер успешно созданного заказа.
-  // null = заказа нет (модалка должна быть закрыта).
-  // число = есть заказ, показываем модалку.
   orderNumber: null,
-  // true пока идёт запрос на создание заказа.
   isLoading: false,
-  // Текст ошибки если запрос упал.
   error: null,
 };
 
@@ -17,7 +12,6 @@ export const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
-    // Закрытие модалки заказа сбрасывает всё в initial.
     clearOrder: () => initialState,
   },
   extraReducers: (builder) => {
