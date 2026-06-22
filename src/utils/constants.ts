@@ -13,3 +13,11 @@ export const TOKEN_ENDPOINT = `${API_BASE_URL}/auth/token`;
 // Password reset endpoints
 export const PASSWORD_RESET_ENDPOINT = `${API_BASE_URL}/password-reset`;
 export const PASSWORD_RESET_CONFIRM_ENDPOINT = `${API_BASE_URL}/password-reset/reset`;
+
+// WebSocket endpoints (другой домен — без /api).
+export const WS_BASE_URL = 'wss://new-stellarburgers.education-services.ru';
+// Общая лента — без авторизации.
+export const ORDERS_FEED_WS_URL = `${WS_BASE_URL}/orders/all`;
+// Пользовательская лента — токен добавляется в query: ?token=${accessToken}
+// (без префикса Bearer; см. profile-orders/middleware подключение).
+export const ORDERS_USER_WS_URL = `${WS_BASE_URL}/orders`;

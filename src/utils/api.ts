@@ -18,6 +18,8 @@ import type {
   Ingredient,
   IngredientsResponse,
   LoginPayload,
+  Order,
+  OrderByNumberResponse,
   OrderResponse,
   RegisterPayload,
   TokenResponse,
@@ -99,6 +101,17 @@ export const getIngredients = async (): Promise<Ingredient[]> => {
   const response = await fetch(INGREDIENTS_ENDPOINT);
   const result = await checkResponse<IngredientsResponse>(response);
   return result.data;
+};
+
+// GET /api/orders/{number} — получить один заказ по номеру.
+// Используется как fallback: WS-лента отдаёт max 50 последних заказов,
+// и при прямом переходе на /feed/:id или /profile/orders/:id нужный
+// заказ может не оказаться в снапшоте. Эндпоинт публичный (без авторизации).
+export const getOrderByNumber = async (number: number | string): Promise<Order> => {
+  const response = await fetch(`${ORDERS_ENDPOINT}/${number}`);
+  const result = await checkResponse<OrderByNumberResponse>(response);
+  // API возвращает массив; берём первый (он же единственный для конкретного номера).
+  return result.orders[0];
 };
 
 export const createOrder = async (ingredientIds: string[]): Promise<number> => {

@@ -2,8 +2,84 @@
   display: flex;
   flex-grow: 1;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  text-align: center;
+  min-height: 0;
+  padding: 0 80px;
+}
+
+.title {
+  /* стандартная типографика */
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex-grow: 1;
+  gap: 40px;
+  min-height: 0;
+}
+
+.list_section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  margin: 0;
+  padding: 0 12px 0 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.status_block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+}
+
+.status_group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.numbers_columns {
+  display: flex;
+  gap: 8px;
+}
+
+.numbers_column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.number_done {
+  color: #0cc;
+}
+
+.totals_block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.totals_number {
+  text-shadow:
+    0 4px 32px rgb(51 51 255 / 25%),
+    0 0 8px rgb(51 51 255 / 25%),
+    0 4px 16px rgb(51 51 255 / 25%);
 }
