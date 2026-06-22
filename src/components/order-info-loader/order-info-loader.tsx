@@ -35,33 +35,53 @@ export const OrderInfoLoader = () => {
     return all.find((order) => String(order.number) === id) ?? null;
   }, [feedOrders, profileOrders, id]);
 
-  // Если в сторе нет — дёргаем GET. Сбрасываем кеш при смене id.
+  // Если в сторе нет — дёргаем GET, но с небольшой задержкой. На прямом
+  // заходе родительская страница параллельно открывает WS, и снапшот
+  // обычно успевает прийти за пару секунд. Дебаунс даёт WS приоритет
+  // и спасает от лишнего 500-ответа в консоли, когда заказ всё равно
+  // подъедет через сокет. Если за окно WS не успел — fallback срабатывает.
   useEffect(() => {
     if (!id || orderFromStore) {
       setFetchedOrder(null);
       setFetchError(null);
+      setIsFetching(false);
       return;
     }
     let cancelled = false;
-    setIsFetching(true);
-    setFetchError(null);
-    getOrderByNumber(id)
-      .then((order) => {
-        if (!cancelled) setFetchedOrder(order);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setFetchError(err instanceof Error ? err.message : 'Не удалось загрузить заказ');
-      })
-      .finally(() => {
-        if (!cancelled) setIsFetching(false);
-      });
+    const timer = setTimeout(() => {
+      setIsFetching(true);
+      setFetchError(null);
+      getOrderByNumber(id)
+        .then((order) => {
+          if (!cancelled) setFetchedOrder(order);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          setFetchError(
+            err instanceof Error ? err.message : 'Не удалось загрузить заказ'
+          );
+        })
+        .finally(() => {
+          if (!cancelled) setIsFetching(false);
+        });
+    }, 3000);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [id, orderFromStore]);
 
   const order = orderFromStore ?? fetchedOrder;
+
+  // Порядок проверок важен: если заказ подъехал через WS пока мы fetch'или
+  // и fetch успел упасть с ошибкой — показываем сам заказ, а не stale-ошибку.
+  if (order) {
+    return <OrderInfo order={order} />;
+  }
+
+  if (isFetching) {
+    return <Preloader />;
+  }
 
   if (fetchError) {
     return (
@@ -71,9 +91,6 @@ export const OrderInfoLoader = () => {
     );
   }
 
-  if (!order || isFetching) {
-    return <Preloader />;
-  }
-
-  return <OrderInfo order={order} />;
+  // Начальное состояние / снапшот ещё не пришёл — прелоадер.
+  return <Preloader />;
 };
