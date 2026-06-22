@@ -160,8 +160,14 @@ export default defineConfig([
           prefer: 'type-imports',
         },
       ],
-      '@typescript-eslint/explicit-function-return-type': 'error',
-      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      // Явные return-типы у каждой функции/компонента в TS-проекте создают
+      // лишний шум: TS отлично выводит типы возвращаемых значений из тела
+      // функции, а ручные аннотации `: JSX.Element` / `: void` дублируют
+      // эту информацию и затрудняют рефакторинг. tseslint.configs.recommended
+      // не включает эти два правила по той же причине; они были добавлены
+      // в стартер опционально. Оставляем выключенными.
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-inferrable-types': [
         'error',
         {
