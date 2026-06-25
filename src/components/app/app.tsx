@@ -12,6 +12,7 @@ import {
 import { AppHeader } from '@components/app-header/app-header';
 import { IngredientDetails } from '@components/ingredient-details/ingredient-details';
 import { Modal } from '@components/modal/modal';
+import { OrderInfoLoader } from '@components/order-info-loader/order-info-loader';
 import { ProtectedRoute } from '@components/protected-route/protected-route';
 import { Feed } from '@pages/feed/feed';
 import { ForgotPassword } from '@pages/forgot-password/forgot-password';
@@ -19,6 +20,7 @@ import { Home } from '@pages/home/home';
 import { Ingredient } from '@pages/ingredient/ingredient';
 import { Login } from '@pages/login/login';
 import { NotFound } from '@pages/not-found/not-found';
+import { OrderInfoPage } from '@pages/order-info-page/order-info-page';
 import { ProfileForm } from '@pages/profile-form/profile-form';
 import { ProfileOrders } from '@pages/profile-orders/profile-orders';
 import { Profile } from '@pages/profile/profile';
@@ -78,6 +80,12 @@ export const App = () => {
     navigate(-1);
   }, [dispatch, navigate]);
 
+  // Закрытие модалки заказа — просто шаг назад в истории; своего
+  // слайса под текущий заказ нет, чистить нечего.
+  const handleCloseOrderModal = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
   return (
     <div className={styles.app}>
       <AppHeader />
@@ -89,6 +97,7 @@ export const App = () => {
       <Routes location={background || location}>
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/feed/:id" element={<OrderInfoPage />} />
         <Route path="/ingredients/:id" element={<Ingredient />} />
 
         <Route
@@ -135,6 +144,16 @@ export const App = () => {
           <Route index element={<ProfileForm />} />
           <Route path="orders" element={<ProfileOrders />} />
         </Route>
+        {/* Маршрут /profile/orders/:id — отдельная страница БЕЗ боковой
+            навигации профиля (по макету), но всё ещё защищён. */}
+        <Route
+          path="/profile/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderInfoPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -149,6 +168,24 @@ export const App = () => {
               <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
                 <IngredientModalContent />
               </Modal>
+            }
+          />
+          <Route
+            path="/feed/:id"
+            element={
+              <Modal onClose={handleCloseOrderModal}>
+                <OrderInfoLoader />
+              </Modal>
+            }
+          />
+          <Route
+            path="/profile/orders/:id"
+            element={
+              <ProtectedRoute>
+                <Modal onClose={handleCloseOrderModal}>
+                  <OrderInfoLoader />
+                </Modal>
+              </ProtectedRoute>
             }
           />
         </Routes>

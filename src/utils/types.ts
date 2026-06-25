@@ -31,6 +31,23 @@ export type User = {
   name: string;
 };
 
+// === Заказы (лента и история) ===
+
+export type OrderStatus = 'created' | 'pending' | 'done';
+
+// Заказ в том виде, как приходит по WebSocket и из GET /api/orders/{number}.
+// Поле ingredients — массив _id ингредиентов; стоимость считаем сами
+// по загруженному списку ингредиентов.
+export type Order = {
+  _id: string;
+  ingredients: string[];
+  status: OrderStatus;
+  number: number;
+  name?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // === Payload'ы для запросов ===
 
 export type RegisterPayload = {
@@ -95,4 +112,34 @@ export type UserResponse = {
 export type MessageResponse = {
   success: boolean;
   message: string;
+};
+
+// Успешное сообщение WebSocket'а лент заказов (/orders/all и /orders?token=).
+// Сервер шлёт это при каждом обновлении: полный снапшот последних
+// (макс. 50) заказов + счётчики.
+export type OrdersFeedResponse = {
+  success: true;
+  orders: Order[];
+  total: number;
+  totalToday: number;
+};
+
+// Ошибка WebSocket-сообщения от сервера. Самый частый случай —
+// «Invalid or missing token» в пользовательской ленте при истёкшем accessToken.
+// Сервер шлёт это поверх того же канала, поэтому слайс должен уметь
+// различать успех/ошибку через дискриминатор success.
+export type WsErrorResponse = {
+  success: false;
+  message: string;
+};
+
+// Дискриминированное объединение того, что приходит по WS. Используется
+// как payload в onMessage обоих middleware (feed и profileOrders).
+export type OrdersFeedMessage = OrdersFeedResponse | WsErrorResponse;
+
+// Ответ GET /api/orders/{number} — fallback для случая, когда заказ
+// с таким номером отсутствует в WS-снапшоте (сервер шлёт max 50 последних).
+export type OrderByNumberResponse = {
+  success: boolean;
+  orders: Order[];
 };

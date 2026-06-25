@@ -1,0 +1,7 @@
+.page {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+  align-items: center;
+  padding: 120px 20px 40px;
+}

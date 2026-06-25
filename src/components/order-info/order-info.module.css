@@ -1,0 +1,75 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.number {
+  align-self: center;
+}
+
+.name {
+  /* стандартная типографика, без дополнительных стилей */
+}
+
+.status {
+  /* стандартная типографика */
+}
+
+.status_done {
+  color: #0cc;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 320px;
+  padding-right: 6px;
+  overflow-y: auto;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.thumbnail_wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #801ab3, #4c4cff);
+  border-radius: 50%;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.row_price {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
