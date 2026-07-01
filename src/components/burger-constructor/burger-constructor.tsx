@@ -92,7 +92,11 @@ export const BurgerConstructor = () => {
   const isOrderButtonDisabled = !bun || isOrderLoading;
 
   return (
-    <section ref={sectionRef} className={`${styles.burger_constructor} pt-25`}>
+    <section
+      ref={sectionRef}
+      className={`${styles.burger_constructor} pt-25`}
+      data-testid="burger-constructor"
+    >
       {bun ? (
         <div className={styles.bun}>
           <ConstructorElement
