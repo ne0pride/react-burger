@@ -49,7 +49,13 @@ export const IngredientCard = ({ ingredient, count }: IngredientCardProps) => {
   const opacity = isDragging ? 0.4 : 1;
 
   return (
-    <li ref={cardRef} className={styles.card} onClick={handleClick} style={{ opacity }}>
+    <li
+      ref={cardRef}
+      className={styles.card}
+      onClick={handleClick}
+      style={{ opacity }}
+      data-testid={`ingredient-${ingredient._id}`}
+    >
       <img src={ingredient.image} alt={ingredient.name} className={styles.image} />
       <div className={`${styles.price} mt-1 mb-1`}>
         <p className="text text_type_digits-default mr-2">{ingredient.price}</p>

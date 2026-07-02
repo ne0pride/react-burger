@@ -5,5 +5,7 @@ type ModalOverlayProps = {
 };
 
 export const ModalOverlay = ({ onClick }: ModalOverlayProps) => {
-  return <div className={styles.overlay} onClick={onClick} />;
+  return (
+    <div className={styles.overlay} onClick={onClick} data-testid="modal-overlay" />
+  );
 };

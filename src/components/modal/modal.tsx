@@ -32,7 +32,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
   return createPortal(
     <>
       <ModalOverlay onClick={onClose} />
-      <div className={styles.modal}>
+      <div className={styles.modal} data-testid="modal">
         <header className={`${styles.header} pt-10 pr-10 pl-10`}>
           {title && (
             <h2 className={`${styles.title} text text_type_main-large`}>{title}</h2>
@@ -42,6 +42,7 @@ export const Modal = ({ title, onClose, children }: ModalProps) => {
             className={styles.close_button}
             onClick={onClose}
             aria-label="Закрыть"
+            data-testid="modal-close"
           >
             <CloseIcon type="primary" />
           </button>

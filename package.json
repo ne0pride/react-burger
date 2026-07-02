@@ -1,11 +1,12 @@
 {
   "name": "vite_bundler",
-  "homepage": "https://kaa-it-js.github.io/react-burger-js-starter/",
+  "homepage": "https://ne0pride.github.io/react-burger/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "postbuild": "node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\"",
     "commit": "cz",
     "check": "stylelint && eslint src/",
     "e2e": "npx playwright test",

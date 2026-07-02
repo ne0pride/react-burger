@@ -15,7 +15,9 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
+      {/* basename берём из base Vite (import.meta.env.BASE_URL): в проде это
+          /react-burger/ для GitHub Pages, в dev/тестах — /. */}
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <App />
       </BrowserRouter>
     </Provider>

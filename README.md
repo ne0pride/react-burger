@@ -1,4 +1,52 @@
-# Стартер на JavaScript для проекта Stellar Burger
+# Stellar Burgers
+
+Космическая бургерная на React + Redux Toolkit + TypeScript: конструктор
+бургеров с drag-and-drop, оформление заказов, авторизация, лента заказов
+в реальном времени (WebSocket).
+
+## 🚀 Задеплоенное приложение
+
+**Приложение доступно по адресу:** https://ne0pride.github.io/react-burger/
+
+Деплой на GitHub Pages: `npm run deploy` (собирает проект и публикует
+содержимое `dist/` в ветку `gh-pages`).
+
+## Стек
+
+- React 19, Redux Toolkit (`combineSlices`, `createAsyncThunk`, WS-middleware)
+- React Router 7 (в т.ч. паттерн «модалка как маршрут»)
+- TypeScript, Vite
+- react-dnd (drag-and-drop ингредиентов)
+- Vitest — модульные тесты редьюсеров
+- Playwright — интеграционные тесты
+
+## Запуск
+
+```bash
+npm install      # установка зависимостей
+npm run dev      # dev-сервер (http://localhost:5173)
+npm run build    # production-сборка в dist/
+npm run preview  # предпросмотр production-сборки
+```
+
+## Тестирование
+
+```bash
+npm test         # модульные тесты редьюсеров (Vitest)
+npm run e2e      # интеграционные тесты (Playwright)
+npm run e2e:ui   # Playwright в UI-режиме
+```
+
+- **Редьюсеры.** Тесты лежат рядом с каждым слайсом —
+  `src/services/**/slice.test.ts`. Покрыты начальное состояние хранилища и
+  все обработчики (обычные редьюсеры, `extraReducers` асинхронных экшенов и
+  экшены WebSocket-лент), а также селекторы.
+- **Страница «Конструктор».** Интеграционные тесты — `e2e/constructor.spec.ts`:
+  перетаскивание ингредиента, открытие модалки ингредиента и её содержимое,
+  оформление заказа и модалка с номером, закрытие модалок. Все сетевые
+  запросы замокированы через HAR-файл `e2e/fixtures/api.har`, поэтому тесты
+  не обращаются к реальному API. Авторизация для теста заказа выполняется
+  в обход UI логина (токены + мок `GET /auth/user`).
 
 ## Процедура создания коммита с проверками
 
