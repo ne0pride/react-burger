@@ -6,7 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     // checker({
     //   typescript: true,
@@ -19,7 +19,9 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  base: '',
+  // При сборке для GitHub Pages приложение раздаётся из подпути
+  // /react-burger/, поэтому нужен соответствующий base. В dev и тестах — '/'.
+  base: command === 'build' ? '/react-burger/' : '/',
   test: {
     globals: true,
     environment: 'jsdom',
@@ -29,4 +31,4 @@ export default defineConfig({
   server: {
     open: true,
   },
-});
+}));
